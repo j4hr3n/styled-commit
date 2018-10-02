@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Improved commit messages by using interactive prompts",
   "main": "index.js",
+  "repository": {
+    "url": "https://github.com/j4hr3n/styled-commit"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
