@@ -10,13 +10,13 @@ const questions = [
   {
     type: "list",
     name: "type",
-    message: "What type of commit is this?",
+    message: "Select the type of change you are commiting",
     choices: require("./constants").commitTypes
   },
   {
     type: "input",
     name: "scope",
-    message: "What's the scope of this commmit?"
+    message: "What is the scope of this change (e.g. component or file name)? (press enter to skip)"
   },
   {
     type: "input",
@@ -25,10 +25,10 @@ const questions = [
   }
 ];
 
-shell.exec('git --version', (code) => {
+shell.exec('git --version >/dev/null', (code) => {
   if (code === 0) {
     inquirer.prompt(questions).then(answers => {
-      shell.exec(`git commit -a -m "${answers.type}(${answers.scope}): ${answers.message}"`, (code) => console.log(`executed git command with code ${code}`));
+      shell.exec(`git commit -a -m "${answers.type}${!!answers.scope ? `(${answers.scope})` : ''}: ${answers.message}"`, (code) => console.log(`executed git command with code ${code}`));
     });
   } else {
     console.log("Git not found. Please install it first");
