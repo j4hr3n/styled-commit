@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+
+const program = require("commander");
+const inquirer = require("inquirer");
+const shell = require("shelljs");
+
+program.version(require("./package.json").version).parse(process.argv);
+
+const questions = [
+  {
+    type: "list",
+    name: "type",
+    message: "What type of commit is this?",
+    choices: require("./constants").commitTypes
+  },
+  {
+    type: "input",
+    name: "scope",
+    message: "What's the scope of this commmit?"
+  },
+  {
+    type: "input",
+    name: "message",
+    message: "What should the commit message state?"
+  }
+];
+
+shell.exec('git --version', (code) => {
+  if (code === 0) {
+    inquirer.prompt(questions).then(answers => {
+      shell.exec(`git commit -a -m "${answers.type}(${answers.scope}): ${answers.message}"`, (code) => console.log(`executed git command with code ${code}`));
+    });
+  } else {
+    console.log("Git not found. Please install it first");
+  }
+})
+
+
+
