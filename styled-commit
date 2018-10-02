@@ -3,6 +3,7 @@
 const program = require("commander");
 const inquirer = require("inquirer");
 const shell = require("shelljs");
+const _ = require("colors"); // adds prototype coloring to strings
 
 program.version(require("./package.json").version).parse(process.argv);
 
@@ -10,30 +11,61 @@ const questions = [
   {
     type: "list",
     name: "type",
-    message: "What type of commit is this?",
+    message: "Select the type of change you are commiting",
     choices: require("./constants").commitTypes
   },
   {
     type: "input",
     name: "scope",
-    message: "What's the scope of this commmit?"
+    message:
+      "What is the scope of this change (e.g. component or file name)? (press enter to skip)"
   },
   {
     type: "input",
     name: "message",
     message: "What should the commit message state?"
+  },
+  {
+    type: "input",
+    name: "longdesc",
+    message: "Provide a longer description of the commit? (press enter to skip)"
+  }, {
+    type: "input",
+    name: "issueref",
+    message: "Is this commit related to a issue? (i.e ISSUE-123)"
   }
 ];
 
-shell.exec('git --version', (code) => {
+const generateGitCommitMessage = (answers) => {
+  const root = 'git commit -a -m';
+  const type = answers.type.split(":")[0];
+  const scope = !!answers.scope ? `(${answers.scope})` : '';
+  const { message, longdesc, issueref } = answers;
+  const firstRow = `"${type}${scope}: ${message}"`
+  const secondRow = !!longdesc ? `-m "${longdesc}"` : '';
+  const thirdRow = !!issueref ? `-m "${issueref}"` : '';
+  
+  return `${root} ${firstRow} ${secondRow} ${thirdRow}`;
+}
+
+shell.exec("git --version", { silent: true }, code => {
   if (code === 0) {
-    inquirer.prompt(questions).then(answers => {
-      shell.exec(`git commit -a -m "${answers.type}(${answers.scope}): ${answers.message}"`, (code) => console.log(`executed git command with code ${code}`));
-    });
+    shell.exec(
+      "[ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1",
+      code => {
+        if (code === 0) {
+          inquirer.prompt(questions).then(answers => {
+            shell.exec(generateGitCommitMessage(answers),
+              code => console.log(`executed git command with code ${code}`)
+            );
+          });
+        } else {
+          console.log("not a git repo".red);
+          process.exit();
+        }
+      }
+    );
   } else {
-    console.log("Git not found. Please install it first");
+    console.log("git not found. please install it first".red);
   }
-})
-
-
-
+});
